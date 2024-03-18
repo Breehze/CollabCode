@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    </head>
+<body>
+    <textarea id="messageInput" rows="10" cols="100"></textarea>
+    <script>
+        
+        function disjoin(content) {
+            const lines = content.split('\n');
+            const matrix = lines.map(line => line.split(''));
+            return matrix;
+        }
+
+        function join(matrix){
+            return matrix.map(row => row.join('')).join('\n') 
+        }
+
+        function getCursorPosition(textarea) {
+            const text = textarea.value;
+            const selectionPoint = textarea.selectionStart;
+            const upToSelection = text.substring(0, selectionPoint);
+            const rows = (upToSelection.match(/\n/g) || []).length + 1;
+            const lastNewlineIndex = upToSelection.lastIndexOf('\n');
+            const cols = selectionPoint - lastNewlineIndex;
+            return [rows-1,cols-2] // Note: rows and columns start counting at 1
+        }
+
+        const url = new URL(window.location.href) 
+        const queryParams = new URLSearchParams(url.search)
+        const ws = new WebSocket(`ws://127.0.0.1:8000/ws/${queryParams.get("col_id")}`)
+                
+        const input = document.getElementById("messageInput")
+        const mirror = document.getElementById("mirror")
+        let on_accept = true
+        let doc;
+        
+        ws.addEventListener('message', (event) => {
+            if (on_accept){
+                doc = JSON.parse(event.data)
+                input.value = join(doc)
+                on_accept = false 
+            }else{
+                parsed = JSON.parse(event.data)
+                console.log(parsed)
+                if (parsed.operation == "Nline"){
+                    doc.splice(parsed.cords[0],0,parsed.content)
+                    return
+                }
+                if (parsed.operation == "Delete"){
+                    if(doc.length == 0){
+                        return
+                    }
+                    if(parsed.cords[1] == doc[parsed.cords[0]].length - 1){
+                        doc.splice(parsed.cords[0]+1,1)
+                        input.value = join(doc)
+                        return
+                    }
+                    doc[parsed.cords[0]].splice(parsed.cords[1]+1,1) 
+                    input.value = join(doc) 
+                    return
+                }
+                if(parsed.operation == "Paste"){
+                    let line = doc[parsed.cords[0]]
+                    if(parsed.content.length == 1){
+                        doc[parsed.cords[0]] = [...line.slice(0,parsed.cords[1]+1),...parsed.content[0],...line.slice(parsed.cords[1]+1)]
+                    }else{
+                        let start = doc[parsed.cords[0]].slice(0,parsed.cords[1]+1)
+                        let end = doc[parsed.cords[0]].slice(parsed.cords[1]+1)
+                        let j = 1
+                        doc[parsed.cords[0]] = [...start,...parsed.content[0]]
+                        for(let i = parsed.cords[0]+ 1 ;i< parsed.cords[0] + parsed.content.length;i++){
+                            doc.splice(i,0,parsed.content[j]) 
+                            j++
+                        }
+
+                    } 
+                    console.log(doc)
+                    input.value = join(doc)
+                    return
+                }
+                doc[parsed.cords[0]].splice(parsed.cords[1],0,parsed.content)
+                console.log(doc)
+                input.value = join(doc)
+                
+            }
+        })
+            
+        input.addEventListener('keydown', (event) => {
+            setTimeout(() => {
+            
+                header = { 
+                    operation : "insert",
+                    cords : getCursorPosition(input),
+                    content : event.key
+                }
+                if(event.key === "Backspace"){
+                    header.operation = "Delete"
+                    header.content = ""
+                }else if(event.key === "Enter"){
+                    header.operation = "Nline"
+                    header.content = []
+
+                }
+                if (header.content.length > 1 || (event.ctrlKey && header.content == 'v') ){
+                    return
+                }
+                ws.send(JSON.stringify(header))
+            })
+        },1) 
+
+        input.addEventListener('paste',(event)=>{
+            event.preventDefault()
+            let pasted = (event.clipboardData || window.clipboardData).getData("text")
+            pasted = pasted.replace(/\r/g,'')
+            header = { 
+                    operation : "Paste",
+                    cords : getCursorPosition(input),
+                    content : disjoin(pasted)
+            }
+            ws.send(JSON.stringify(header))            
+
+        })
+    
+    </script>
+
+</body>
+</html>
+
