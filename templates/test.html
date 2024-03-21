@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebSocket Test</title>
+    <title>Editor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>hljs.highlightAll();</script>
     </head>
 <body>
-    <textarea id="messageInput" rows="10" cols="100"></textarea>
+    <div>
+        <textarea id="messageInput" rows="10" cols="100" autocomplete ="off" ></textarea>
+        <pre><code id="codeInput" class = "language-python"></code></pre>
+    </div>
     <script>
-        
+                
         function disjoin(content) {
             const lines = content.split('\n');
             const matrix = lines.map(line => line.split(''));
@@ -34,10 +36,10 @@
 
         const url = new URL(window.location.href) 
         const queryParams = new URLSearchParams(url.search)
-        const ws = new WebSocket(`ws://127.0.0.1:8000/ws/${queryParams.get("col_id")}`)
+        const ws = new WebSocket(`ws://127.0.0.1:8000/collab/${queryParams.get("col_id")}`)
                 
         const input = document.getElementById("messageInput")
-        const mirror = document.getElementById("mirror")
+        const codeInput = document.getElementById("codeInput")
         let on_accept = true
         let doc;
         
@@ -45,8 +47,11 @@
             if (on_accept){
                 doc = JSON.parse(event.data)
                 input.value = join(doc)
+                codeInput.textContent = join(doc)
                 on_accept = false 
+                hljs.highlightElement(codeInput)
             }else{
+                codeInput.removeAttribute('data-highlighted')
                 parsed = JSON.parse(event.data)
                 console.log(parsed)
                 if (parsed.operation == "Nline"){
@@ -60,10 +65,14 @@
                     if(parsed.cords[1] == doc[parsed.cords[0]].length - 1){
                         doc.splice(parsed.cords[0]+1,1)
                         input.value = join(doc)
+                        codeInput.textContent = join(doc)
+                        hljs.highlightElement(codeInput);
                         return
                     }
                     doc[parsed.cords[0]].splice(parsed.cords[1]+1,1) 
                     input.value = join(doc) 
+                    codeInput.textContent = join(doc)
+                    hljs.highlightElement(codeInput);
                     return
                 }
                 if(parsed.operation == "Paste"){
@@ -83,11 +92,15 @@
                     } 
                     console.log(doc)
                     input.value = join(doc)
+                    codeInput.textContent = join(doc)
+                    hljs.highlightElement(codeInput);
                     return
                 }
                 doc[parsed.cords[0]].splice(parsed.cords[1],0,parsed.content)
                 console.log(doc)
                 input.value = join(doc)
+                codeInput.textContent = join(doc)
+                hljs.highlightElement(codeInput);
                 
             }
         })
@@ -127,9 +140,9 @@
             ws.send(JSON.stringify(header))            
 
         })
-    
-    </script>
-
+     
+        
+    </script> 
 </body>
 </html>
 

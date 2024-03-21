@@ -1,4 +1,9 @@
-
+"""
+operation : insert/delete/nline
+cord : (x,y)
+content : letter
+}
+"""
 def new_line(doc : list[list[str]], mod_message : dict):
     doc.insert(mod_message["cords"][0],[])
 
