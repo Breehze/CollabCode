@@ -1,24 +1,33 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, WebSocketDisconnect, WebSocket 
 from fastapi.responses import HTMLResponse
 from fastapi.exceptions import HTTPException
 from fastapi.templating import Jinja2Templates
 from utils.wsmanager import ConManager 
 from utils import docOperations
-from utils import codeExec
+from utils import containerManager
 from uuid import uuid4
 
-app = FastAPI()
 """
 operation : insert/delete/nline
 cord : (x,y)
 content : letter
 }
 """ 
-
+cont_manager = containerManager.containerManager({'python:3.11-slim': 2})
 test_docs = {}
 templates = Jinja2Templates("templates")
 
 con_man = ConManager()
+
+
+@asynccontextmanager
+async def lifespan(app : FastAPI):
+    print("start up")
+    yield
+    cont_manager.teardown()
+    
+app = FastAPI(lifespan = lifespan)
 
 @app.get("/")
 async def landing_page(request:Request):
@@ -38,7 +47,7 @@ async def run_py(collab_doc_id : str):
     if collab_doc_id not in test_docs:
         raise HTTPException(status_code=400,detail="This collab doesn't exist")
     merged = '\n'.join([''.join(inner_list) for inner_list in test_docs[collab_doc_id]])
-    return await codeExec.run_python(merged)
+    return await cont_manager.run_code_async("python:3.11-slim",merged) 
 
 @app.websocket("/collab/{live_collab_id}")
 async def hello_socket(ws : WebSocket, live_collab_id : str ):
@@ -64,3 +73,6 @@ async def hello_socket(ws : WebSocket, live_collab_id : str ):
             await con_man.broadcast(live_collab_id,content_rec) 
     except WebSocketDisconnect:
         con_man.disconnect(live_collab_id,ws)
+        if live_collab_id not in con_man.active_connections:
+            test_docs.pop(live_collab_id)
+

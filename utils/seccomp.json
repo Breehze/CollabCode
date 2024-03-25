@@ -1,0 +1,47 @@
+{
+  "defaultAction": "SCMP_ACT_ERRNO",
+  "archMap": [
+    {
+      "architecture": "SCMP_ARCH_X86_64",
+      "subArchitectures": [
+        "SCMP_ARCH_X86",
+        "SCMP_ARCH_X32"
+      ]
+    }
+  ],
+  "syscalls": [
+    {
+      "names": [
+        "open",
+        "read",
+        "write",
+        "close",
+        "stat",
+        "fstat",
+        "lstat",
+        "lseek",
+        "mmap",
+        "munmap",
+        "chmod",
+        "fchmod",
+        "chown",
+        "fchown",
+        "lchown",
+        "unlink",
+        "execve",
+        "exit",
+        "kill",
+        "getpid",
+        "kill",
+        "fork",
+        "wait4",
+        "munmap",
+        "mprotect",
+        "brk",
+        "openat"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    }
+  ]
+}
+
