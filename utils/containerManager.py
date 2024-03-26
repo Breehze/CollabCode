@@ -25,7 +25,7 @@ class containerManager:
         self.cont_pool[lang].remove(container)
         try:
             async with asyncio.timeout(5):
-                result = await event_loop.run_in_executor( None , lambda :container.exec_run(f"python -c \"{script}\""))
+                result = await event_loop.run_in_executor( None , lambda :container.exec_run(f"python -c \"{script.replace('"','\\"')}\""))
         except asyncio.TimeoutError: 
             ditch_process = await event_loop.run_in_executor(None, lambda : container.exec_run("sh -c 'ps x | grep [p]ython'"))
             p_to_kill = ditch_process.output.decode().split()[0]

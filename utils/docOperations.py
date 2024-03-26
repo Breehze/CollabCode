@@ -8,12 +8,15 @@ def new_line(doc : list[list[str]], mod_message : dict):
     doc.insert(mod_message["cords"][0],[])
 
 def letter_delete(doc : list[list[str]], mod_message : dict):
-    if len(doc[0]) == 0:
-        return
-    if mod_message["cords"][1] == len(doc[mod_message['cords'][0]]) -1:
-        doc.pop(mod_message["cords"][0]+1)
-        return
-    doc[mod_message["cords"][0]].pop(mod_message["cords"][1]+1)
+    try: #client sometimes sends dupe cords resulting in indexing into invalid position
+        if len(doc[0]) == 0:
+            return
+        if mod_message["cords"][1] == len(doc[mod_message['cords'][0]]) -1:
+            doc.pop(mod_message["cords"][0]+1)
+            return
+        doc[mod_message["cords"][0]].pop(mod_message["cords"][1]+1)
+    except:
+        pass
 
 def letter_insert(doc : list[list[str]],mod_message : dict):
     doc[mod_message["cords"][0]].insert(mod_message["cords"][1],mod_message["content"])
