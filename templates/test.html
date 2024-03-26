@@ -10,7 +10,9 @@
 <body>
     <div>
         <textarea id="messageInput" rows="10" cols="100" autocomplete ="off" ></textarea>
+        <button id="codeRun" type="">Run python script</button>
         <pre><code id="codeInput" class = "language-python"></code></pre>
+        <pre><code id = "codeOut"></code></pre>   
     </div>
     <script>
                 
@@ -36,7 +38,7 @@
 
         const url = new URL(window.location.href) 
         const queryParams = new URLSearchParams(url.search)
-        const ws = new WebSocket(`ws://127.0.0.1:8000/collab/${queryParams.get("col_id")}`)
+        const ws = new WebSocket(`ws://{{DOMAIN}}/collab/${queryParams.get("col_id")}`)
                 
         const input = document.getElementById("messageInput")
         const codeInput = document.getElementById("codeInput")
@@ -140,6 +142,21 @@
             ws.send(JSON.stringify(header))            
 
         })
+
+        let run_but = document.getElementById("codeRun")
+        let code_out = document.getElementById("codeOut")
+
+        run_but.addEventListener('click',(event)=>{
+            fetch(`/run/{{collab_id}}`,{
+                method: 'POST',
+                headers:{
+                    'Content-Type':'application/json'
+                }
+                
+            }).then(response=> response.json()).then(data => {code_out.innerHTML = data})
+        })
+
+        
      
         
     </script> 

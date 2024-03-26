@@ -14,6 +14,7 @@ cord : (x,y)
 content : letter
 }
 """ 
+DOMAIN = "127.0.0.1:8000"
 cont_manager = containerManager.containerManager({'python:3.11-slim': 2})
 test_docs = {}
 templates = Jinja2Templates("templates")
@@ -33,14 +34,14 @@ app = FastAPI(lifespan = lifespan)
 async def landing_page(request:Request):
     collab_uuid = str(uuid4())
     test_docs.update({collab_uuid: [[]]}) 
-    collab_url = f"http://127.0.0.1:8000/collab?col_id={collab_uuid}"  
+    collab_url = f"http://{DOMAIN}/collab?col_id={collab_uuid}"  
     return templates.TemplateResponse("landing_page.html",{"request": request, "collab_url" : collab_url})
 
 @app.get("/collab")
 async def collab_page(request : Request,col_id : str):
     if col_id not in test_docs:
         raise HTTPException(status_code=404 , detail="This collab couldn't be found")
-    return  templates.TemplateResponse("test.html",{"request": request})
+    return  templates.TemplateResponse("test.html",{"request": request, "DOMAIN" : DOMAIN,"collab_id":col_id})
 
 @app.post("/run/{collab_doc_id}")
 async def run_py(collab_doc_id : str):
