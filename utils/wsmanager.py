@@ -22,8 +22,10 @@ class ConManager:
     async def send_personal_message(self, message: list | dict, websocket: WebSocket):
         await websocket.send_json(message)
 
-    async def broadcast(self,uuid : str, message : list | dict):
+    async def broadcast(self,client_ws,uuid : str, message : list | dict):
         for connection in self.active_connections[uuid]:
+            if connection == client_ws:
+                continue
             await connection.send_json(message)
 
 
