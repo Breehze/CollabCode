@@ -131,9 +131,8 @@
             }else if (event.key == "Enter"){
                 header.operation = "Nline"
                 header.content = []
-            }
+            }           
             if (header.content.length > 1 || (event.ctrlKey && header.content == 'v') ){
-                console.log("hello")
                 return
             }  
             props.webSocket.send(JSON.stringify(header))

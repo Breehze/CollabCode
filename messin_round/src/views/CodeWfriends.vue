@@ -11,6 +11,9 @@
 
     onMounted(() => {
         ws.value = new WebSocket(`ws://127.0.0.1:8000/collab/${route.query["col_id"]}`) 
+        ws.onclose = () =>{
+            alert("Oops something went wrong! You have been disconnected")
+        }
     })
 
     onUnmounted(()=> {
@@ -18,14 +21,7 @@
             ws.value.close()
         }
     })
-    
-    
-    console.log(route.query)
-    const collabWs = new WebSocket(`ws://127.0.0.1:8000/collab/${route.query["col_id"]}`)
-    
-    collabWs.onclose = () =>{
-        alert("Oops something went wrong! You have been disconnected")
-    }
+     
 
 </script>
 

@@ -6,7 +6,7 @@
     import CircledButton from '../components/CircledButton.vue'
     
     const generatedCollabUrl = ref()
-    axios.get('/generate_collab').then((response) => {
+    axios.get('http://127.0.0.1:8000/generate_collab').then((response) => {
         generatedCollabUrl.value = response.data
     })
  
